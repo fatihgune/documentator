@@ -1,0 +1,20 @@
+{
+  "name": "documentator",
+  "version": "0.1.0",
+  "description": "AI-powered living documentation engine",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "validate": "tsx src/validate.ts"
+  },
+  "devDependencies": {
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1",
+    "js-yaml": "^4.1.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0",
+    "@types/js-yaml": "^4.0.9"
+  }
+}
