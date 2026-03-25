@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Service Manifest",
+  "description": "Documentator service manifest — one per discovered repository",
+  "type": "object",
+  "required": ["schema_version", "service", "endpoints"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "service": {
+      "type": "object",
+      "required": ["name", "repo", "stack", "discovered"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "repo": { "type": "string", "minLength": 1 },
+        "stack": { "type": "string", "minLength": 1 },
+        "discovered": { "type": "string", "format": "date-time" }
+      }
+    },
+    "endpoints": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["route", "description"],
+        "additionalProperties": false,
+        "properties": {
+          "route": {
+            "type": "string",
+            "pattern": "^(GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS) /"
+          },
+          "description": { "type": "string", "minLength": 1 },
+          "request": { "type": "object" },
+          "response": { "type": "object" },
+          "business_rules": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "confidence": {
+            "type": "string",
+            "enum": ["low"]
+          }
+        }
+      }
+    },
+    "outbound_calls": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["target", "endpoint", "sends", "condition"],
+        "additionalProperties": false,
+        "properties": {
+          "target": { "type": "string", "minLength": 1 },
+          "endpoint": {
+            "type": "string",
+            "pattern": "^(GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS) /"
+          },
+          "sends": { "type": "object" },
+          "condition": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "data_models": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "fields"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "fields": { "type": "object" },
+          "relationships": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    },
+    "business_rules": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["type", "topic"],
+        "additionalProperties": false,
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["publishes", "consumes"]
+          },
+          "topic": { "type": "string", "minLength": 1 },
+          "payload": { "type": "object" },
+          "action": { "type": "string" }
+        }
+      }
+    }
+  }
+}

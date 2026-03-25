@@ -1,0 +1,83 @@
+schema_version: 1
+service:
+  name: order-service
+  repo: github.com/company/order-service
+  stack: laravel
+  discovered: "2026-03-25T10:00:00Z"
+
+endpoints:
+  - route: POST /orders
+    description: Creates a new order from cart contents
+    request:
+      cart_id: string
+      customer_id: string
+      priority: boolean
+    response:
+      order_id: string
+      status: string
+      total: number
+    business_rules:
+      - "Orders over $500 set status to 'pending_approval'"
+      - "Priority customers get express processing"
+
+  - route: GET /orders
+    description: Lists orders with optional filters
+    request:
+      customer_id: string
+      status: string
+      page: number
+    response:
+      orders: "Order[]"
+      total: number
+    confidence: low
+
+outbound_calls:
+  - target: inventory-service
+    endpoint: POST /reservations
+    sends:
+      items: "Item[]"
+      order_id: string
+    condition: "After order creation succeeds"
+  - target: communication-service
+    endpoint: POST /send
+    sends:
+      template: order-confirmation
+      params:
+        order_id: string
+        customer_name: string
+    condition: "After order status set to 'confirmed'"
+
+data_models:
+  - name: Order
+    fields:
+      order_id: string
+      customer_id: string
+      status: "string (created | pending_approval | confirmed | cancelled)"
+      total: number
+      items: "Item[]"
+      created_at: datetime
+    relationships:
+      - "belongs to a Customer"
+      - "contains one or more Items"
+  - name: Item
+    fields:
+      item_id: string
+      product_id: string
+      quantity: number
+      unit_price: number
+
+business_rules:
+  - "Orders over $500 require manager approval before confirmation"
+  - "Priority customers bypass the approval threshold"
+  - "Cancelled orders trigger inventory release"
+
+events:
+  - type: publishes
+    topic: order.created
+    payload:
+      order_id: string
+      customer_id: string
+      total: number
+  - type: consumes
+    topic: payment.confirmed
+    action: "Updates order status to 'confirmed' and triggers fulfillment"
