@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { readFileSync } from "fs";
 import { join } from "path";
 import yaml from "js-yaml";
-import { validateServiceManifest, validateFlow, validateIndex } from "../src/validate.js";
+import { validateServiceManifest, validateFlow, validateIndex, detectFileType } from "../src/validate.js";
 
 const fixture = (path: string) =>
   yaml.load(readFileSync(join(__dirname, "fixtures", path), "utf-8"));
@@ -85,5 +85,25 @@ describe("validateIndex", () => {
     };
     const result = validateIndex(data);
     expect(result.valid).toBe(false);
+  });
+});
+
+describe("detectFileType", () => {
+  it("detects service manifest by schema_version + service keys", () => {
+    expect(detectFileType({ schema_version: 1, service: {}, endpoints: [] })).toBe(
+      "service-manifest"
+    );
+  });
+
+  it("detects flow by flow + steps keys", () => {
+    expect(detectFileType({ flow: {}, steps: [] })).toBe("flow");
+  });
+
+  it("detects index by services + flows keys", () => {
+    expect(detectFileType({ services: [], flows: [] })).toBe("index");
+  });
+
+  it("returns unknown for unrecognized structure", () => {
+    expect(detectFileType({ foo: "bar" })).toBe("unknown");
   });
 });
