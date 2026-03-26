@@ -1,0 +1,28 @@
+schema_version: 1
+service:
+  name: communication-service
+  repo: github.com/company/communication-service
+  stack: laravel
+  discovered: "2026-03-25T12:00:00Z"
+
+endpoints:
+  - route: POST /send
+    description: Sends a notification via the specified channel and template
+    request:
+      channel: string
+      template: string
+      recipient: string
+      params: object
+    response:
+      message_id: string
+      status: string
+
+  - route: GET /templates
+    description: Lists all available notification templates
+    response:
+      templates: "Template[]"
+
+events:
+  - type: consumes
+    topic: notification.requested
+    action: "Processes queued notification request and dispatches via appropriate channel"

@@ -27,6 +27,12 @@ describe("validateServiceManifest", () => {
     const result = validateServiceManifest(data);
     expect(result.valid).toBe(false);
   });
+
+  it("accepts a minimal service manifest (thin service)", () => {
+    const data = fixture("valid/communication-service.yaml");
+    const result = validateServiceManifest(data);
+    expect(result.valid).toBe(true);
+  });
 });
 
 describe("validateFlow", () => {
