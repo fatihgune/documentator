@@ -113,3 +113,42 @@ describe("detectFileType", () => {
     expect(detectFileType({ foo: "bar" })).toBe("unknown");
   });
 });
+
+describe("cross-file consistency", () => {
+  it("flow references only services that could have manifests", () => {
+    const flow = fixture("valid/place-order.flow.yaml") as {
+      flow: { services_involved: string[] };
+    };
+    // All services_involved should be non-empty strings
+    for (const svc of flow.flow.services_involved) {
+      expect(svc.length).toBeGreaterThan(0);
+    }
+  });
+
+  it("index service entries have valid file paths", () => {
+    const index = fixture("valid/index.yaml") as {
+      services: { file: string }[];
+      flows: { file: string }[];
+    };
+    for (const svc of index.services) {
+      expect(svc.file).toMatch(/^services\/[\w-]+\.yaml$/);
+    }
+    for (const flow of index.flows) {
+      expect(flow.file).toMatch(/^flows\/[\w-]+\/[\w-]+\.yaml$/);
+    }
+  });
+
+  it("all fixture files pass their respective validators", () => {
+    const serviceResult = validateServiceManifest(fixture("valid/order-service.yaml"));
+    const serviceResult2 = validateServiceManifest(
+      fixture("valid/communication-service.yaml")
+    );
+    const flowResult = validateFlow(fixture("valid/place-order.flow.yaml"));
+    const indexResult = validateIndex(fixture("valid/index.yaml"));
+
+    expect(serviceResult.valid).toBe(true);
+    expect(serviceResult2.valid).toBe(true);
+    expect(flowResult.valid).toBe(true);
+    expect(indexResult.valid).toBe(true);
+  });
+});
