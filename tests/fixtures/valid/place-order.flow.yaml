@@ -1,0 +1,37 @@
+flow:
+  name: Place Order
+  domain: orders
+  trigger: "User clicks 'Place Order' on checkout page"
+  services_involved:
+    - frontend-checkout
+    - api-gateway
+    - order-service
+    - inventory-service
+    - communication-service
+
+steps:
+  - service: frontend-checkout
+    action: "Submits cart_id and customer_id to gateway"
+    endpoint: POST /api/orders
+
+  - service: api-gateway
+    action: "Authenticates request, routes to order-service"
+    endpoint: POST /orders
+
+  - service: order-service
+    action: "Validates cart, calculates total, creates order"
+    branches:
+      - condition: "total > $500"
+        action: "Sets status to 'pending_approval', publishes order.created event"
+      - condition: "total <= $500"
+        action: "Sets status to 'confirmed'"
+
+  - service: inventory-service
+    action: "Reserves stock for all items in the order"
+    endpoint: POST /reservations
+    failure: "If stock unavailable, order status set to 'pending_stock'"
+
+  - service: communication-service
+    action: "Sends order-confirmation email to customer"
+    endpoint: POST /send
+    template: order-confirmation

@@ -32,3 +32,17 @@ export function validateServiceManifest(data: unknown): ValidationResult {
   );
   return { valid: false, errors };
 }
+
+const flowSchema = loadSchema("flow.schema.json");
+const validateFlowSchema = ajv.compile(flowSchema);
+
+export function validateFlow(data: unknown): ValidationResult {
+  const valid = validateFlowSchema(data);
+  if (valid) {
+    return { valid: true, errors: [] };
+  }
+  const errors = (validateFlowSchema.errors ?? []).map(
+    (e) => `${e.instancePath || "/"}: ${e.message}`
+  );
+  return { valid: false, errors };
+}

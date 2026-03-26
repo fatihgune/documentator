@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Flow",
+  "description": "Documentator cross-service business flow",
+  "type": "object",
+  "required": ["flow", "steps"],
+  "additionalProperties": false,
+  "properties": {
+    "flow": {
+      "type": "object",
+      "required": ["name", "domain", "trigger", "services_involved"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "domain": { "type": "string", "minLength": 1 },
+        "trigger": { "type": "string", "minLength": 1 },
+        "services_involved": {
+          "type": "array",
+          "minItems": 2,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "steps": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "required": ["service", "action"],
+        "additionalProperties": false,
+        "properties": {
+          "service": { "type": "string", "minLength": 1 },
+          "action": { "type": "string", "minLength": 1 },
+          "endpoint": {
+            "type": "string",
+            "pattern": "^(GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS) /"
+          },
+          "branches": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["condition", "action"],
+              "additionalProperties": false,
+              "properties": {
+                "condition": { "type": "string" },
+                "action": { "type": "string" }
+              }
+            }
+          },
+          "failure": { "type": "string" },
+          "template": { "type": "string" }
+        }
+      }
+    }
+  }
+}
