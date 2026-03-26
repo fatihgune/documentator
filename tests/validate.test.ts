@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { readFileSync } from "fs";
 import { join } from "path";
 import yaml from "js-yaml";
-import { validateServiceManifest, validateFlow } from "../src/validate.js";
+import { validateServiceManifest, validateFlow, validateIndex } from "../src/validate.js";
 
 const fixture = (path: string) =>
   yaml.load(readFileSync(join(__dirname, "fixtures", path), "utf-8"));
@@ -64,6 +64,26 @@ describe("validateFlow", () => {
       steps: [{ service: "a", action: "only step" }],
     };
     const result = validateFlow(data);
+    expect(result.valid).toBe(false);
+  });
+});
+
+describe("validateIndex", () => {
+  it("accepts a valid index file", () => {
+    const data = fixture("valid/index.yaml");
+    const result = validateIndex(data);
+    expect(result.valid).toBe(true);
+    expect(result.errors).toEqual([]);
+  });
+
+  it("rejects index with missing service file path", () => {
+    const data = {
+      services: [
+        { name: "order-service", summary: "Manages orders", endpoints_count: 5 },
+      ],
+      flows: [],
+    };
+    const result = validateIndex(data);
     expect(result.valid).toBe(false);
   });
 });

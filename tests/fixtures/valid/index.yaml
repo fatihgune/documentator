@@ -1,0 +1,27 @@
+services:
+  - name: order-service
+    file: services/order-service.yaml
+    summary: "Manages order lifecycle: creation, approval, cancellation"
+    endpoints_count: 12
+  - name: inventory-service
+    file: services/inventory-service.yaml
+    summary: "Tracks stock levels, manages reservations"
+    endpoints_count: 8
+
+flows:
+  - name: Place Order
+    file: flows/orders/place-order.yaml
+    summary: "End-to-end order creation from checkout through fulfillment"
+    services:
+      - frontend-checkout
+      - api-gateway
+      - order-service
+      - inventory-service
+      - communication-service
+  - name: Cancel Order
+    file: flows/orders/cancel-order.yaml
+    summary: "Order cancellation with inventory release and customer notification"
+    services:
+      - order-service
+      - inventory-service
+      - communication-service

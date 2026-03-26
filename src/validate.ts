@@ -46,3 +46,17 @@ export function validateFlow(data: unknown): ValidationResult {
   );
   return { valid: false, errors };
 }
+
+const indexSchema = loadSchema("index.schema.json");
+const validateIndexSchema = ajv.compile(indexSchema);
+
+export function validateIndex(data: unknown): ValidationResult {
+  const valid = validateIndexSchema(data);
+  if (valid) {
+    return { valid: true, errors: [] };
+  }
+  const errors = (validateIndexSchema.errors ?? []).map(
+    (e) => `${e.instancePath || "/"}: ${e.message}`
+  );
+  return { valid: false, errors };
+}
