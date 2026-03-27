@@ -1,0 +1,14 @@
+pipelines:
+  custom:
+    documentator-nightly:
+      - step:
+          name: Nightly Knowledge Base Update
+          script:
+            - npm ci
+            - npx tsx node_modules/documentator/src/nightly/cli.ts
+    documentator-audit:
+      - step:
+          name: Accuracy Audit
+          script:
+            - npm ci
+            - npx tsx node_modules/documentator/src/audit/cli.ts
