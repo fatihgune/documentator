@@ -172,12 +172,26 @@ For each, determine if it introduces new data flows or business rules not alread
 
 ### Pass 4: Assembly
 
-1. Merge all findings into the YAML structure defined above
-2. Deduplicate: if an outbound call was discovered both via endpoint tracing and event scanning, keep one entry
-3. Extract service-wide business rules that apply to multiple endpoints into the top-level `business_rules` list
-4. Order endpoints by path alphabetically, then by HTTP method
-5. Write the file as `<service-name>.yaml`
-6. **Interactive mode:** Present a summary to the user:
+**IMPORTANT: Write the manifest incrementally, not all at once.** Large services produce manifests that exceed output token limits. Use the following chunked approach:
+
+1. **Write the header and start the file:**
+   Write `<service-name>.yaml` with the `schema_version`, `service` block, and `endpoints:` key. Leave the file open for appending.
+
+2. **Write endpoints in chunks:**
+   Append endpoints to the file in groups of 5-10. Each write appends a batch of endpoint entries under the `endpoints:` array. Do NOT try to write all endpoints in a single operation.
+
+3. **Write remaining sections:**
+   After all endpoints are written, append each remaining section as a separate write operation:
+   - `outbound_calls:` (if any)
+   - `data_models:` (if any)
+   - `business_rules:` (if any, service-wide rules extracted from multiple endpoints)
+   - `events:` (if any)
+
+4. Deduplicate: if an outbound call was discovered both via endpoint tracing and event scanning, keep one entry
+5. Extract service-wide business rules that apply to multiple endpoints into the top-level `business_rules` list
+6. Order endpoints by path alphabetically, then by HTTP method
+7. After the file is fully written, **read it back** and verify it is valid YAML. Fix any formatting issues (indentation, missing colons, etc.).
+8. **Interactive mode:** Present a summary to the user:
    > "Discovered N endpoints, M outbound calls, K data models, J events. L endpoints marked confidence: low. Review the output at `<path>`."
    **Headless mode:** Write the file silently. Log a one-line summary to stdout for pipeline consumption.
 
