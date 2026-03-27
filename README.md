@@ -22,10 +22,13 @@ The knowledge base is optimized for LLM consumption. A fast, cheap model reading
 ### Install
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/fatihgune/documentator.git
 cd documentator
 npm install
+./scripts/install-skills.sh
 ```
+
+The install script copies `/discover` and `/link` skills into Claude Code. Restart Claude Code after running it.
 
 ### Discover a Service
 
