@@ -4,7 +4,8 @@
   "description": "AI-powered living documentation engine",
   "type": "module",
   "bin": {
-    "documentator-nightly": "./src/nightly/cli.ts"
+    "documentator-nightly": "./src/nightly/cli.ts",
+    "documentator-audit": "./src/audit/cli.ts"
   },
   "scripts": {
     "test": "vitest run",
