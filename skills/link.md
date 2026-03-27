@@ -1,11 +1,11 @@
 ---
-name: link
+name: documentator:link
 description: Read all service manifests in a Documentator knowledge base and produce cross-service flow traces. Run this in the root of a knowledge base repository after all services have been discovered.
 ---
 
 # Documentator: Link Services Into Flows
 
-You are reading a collection of service manifests (produced by `/discover`) and building **cross-service flow files** that trace how features work end-to-end across multiple services. You also produce an **index file** that serves as a table of contents for the entire knowledge base.
+You are reading a collection of service manifests (produced by `/documentator:discover`) and building **cross-service flow files** that trace how features work end-to-end across multiple services. You also produce an **index file** that serves as a table of contents for the entire knowledge base.
 
 ## Critical Rules
 
@@ -14,6 +14,19 @@ You are reading a collection of service manifests (produced by `/discover`) and 
 3. **Include branching logic.** If a flow has conditional paths (different behavior for different order amounts, customer types, etc.), document ALL branches.
 4. **Don't load everything at once.** Read manifests in small groups as you trace connections. A flow touching 4 services needs only those 4 manifests loaded.
 5. **Flag unresolved connections.** If a service calls `target: unknown`, note this in the flow as a gap.
+
+## Modes
+
+### Interactive Mode (default)
+
+The standard mode when run by a developer. Presents connection graph summary, flow list, and gap analysis for review.
+
+### Headless Mode (`--headless`)
+
+Used by the nightly update pipeline. Differences from interactive mode:
+- **No summaries or prompts.** Write all output files directly.
+- **Log to stdout.** Print a one-line JSON summary for pipeline consumption: `{"flows_written": N, "flows_updated": M, "unresolved": K}`
+- **Incremental by default.** When flow files already exist, detect which flows are affected by manifest changes and only regenerate those. Unaffected flows are left untouched.
 
 ## Output
 
@@ -125,7 +138,7 @@ Deduplicate:
 
 ### Step 6: Gap Analysis
 
-After generating all flows, report:
+**Interactive mode:** After generating all flows, report:
 
 1. **Isolated services**: services with no inbound or outbound connections to other discovered services
 2. **Dead-end outbound calls**: calls to services not in the knowledge base
@@ -133,6 +146,8 @@ After generating all flows, report:
 4. **Single-service flows discarded**: entry points that didn't lead to cross-service flows (these are already in the service manifest)
 
 Present this as a summary so the user knows what's missing and can discover additional repos to fill gaps.
+
+**Headless mode:** Skip the interactive report. Include gap counts in the stdout JSON summary.
 
 ## Important Notes
 
