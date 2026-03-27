@@ -6,8 +6,12 @@ AI-powered living documentation engine. Produces LLM-optimized knowledge bases f
 
 - `src/schemas/` — JSON Schema definitions for the knowledge base format
 - `src/validate.ts` — Schema validation utility (library + CLI)
-- `skills/discover.md` — Claude Code skill for codebase discovery
-- `skills/link.md` — Claude Code skill for cross-service flow generation
+- `src/nightly/` — Nightly update pipeline (clone, triage, re-discover, link, PR)
+- `src/audit/` — Accuracy audit tool (full re-discover + diff)
+- `skills/discover.md` — `/documentator:discover` skill for codebase discovery
+- `skills/link.md` — `/documentator:link` skill for cross-service flow generation
+- `adapters/` — Git provider adapters (GitHub, Bitbucket)
+- `examples/` — CI workflow examples
 - `templates/CLAUDE.md` — Template for knowledge base repo consumption
 - `tests/` — Vitest tests with YAML fixtures
 
@@ -15,6 +19,8 @@ AI-powered living documentation engine. Produces LLM-optimized knowledge bases f
 
 - `npm test` — run all tests
 - `npx tsx src/validate.ts <file.yaml>` — validate a knowledge base file
+- `npx tsx src/nightly/cli.ts` — run the nightly update pipeline (from knowledge base repo root)
+- `npx tsx src/audit/cli.ts` — run the accuracy audit (from knowledge base repo root)
 
 ## Schema files
 
