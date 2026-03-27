@@ -1,0 +1,3 @@
+pr_auto_merge: "yes"  # should be boolean
+concurrency: -5        # invalid
+full_rediscover_triggers: "not-an-array"

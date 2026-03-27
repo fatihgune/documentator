@@ -1,0 +1,11 @@
+notification_hook: ./hooks/notify.sh
+pr_auto_merge: true
+claude_model: sonnet
+concurrency: sequential
+full_rediscover_triggers:
+  - "package.json"
+  - "package-lock.json"
+  - "composer.json"
+  - "Dockerfile"
+  - "*.migration.*"
+  - "db/migrations/**"
