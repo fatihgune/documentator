@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "description": "AI-powered living documentation engine",
   "type": "module",
+  "bin": {
+    "documentator-nightly": "./src/nightly/cli.ts"
+  },
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest",
