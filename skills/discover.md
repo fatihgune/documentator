@@ -1,5 +1,5 @@
 ---
-name: discover
+name: documentator:discover
 description: Discover a codebase and produce a service manifest for the Documentator knowledge base. Run this in the root of a repository to analyze its endpoints, business logic, data flows, and external service calls.
 ---
 
@@ -14,6 +14,37 @@ You are analyzing a codebase to produce a **service manifest** -- a structured Y
 3. **Data fields, not class names.** Request/response shapes use field names and primitive types: `{order_id: string, total: number}`. Never reference DTO classes, form requests, or serializers by name.
 4. **Explicit uncertainty.** If you cannot trace where an outbound call goes (URL from env var you can't resolve, dynamic dispatch), mark it as `target: unknown`. Never guess.
 5. **Idempotent.** If run twice on the same codebase at the same commit, produce the same output.
+
+## Modes
+
+This skill operates in two modes:
+
+### Interactive Mode (default)
+
+The standard mode when run by a developer. Asks for input on large services, presents results for review.
+
+### Headless Mode (`--headless`)
+
+Used by the nightly update pipeline. Differences from interactive mode:
+- **No prompts.** If a service has >50 endpoints, discover all of them in batches without asking.
+- **No review step.** Write the output file directly without presenting a summary for approval.
+- **Direct file write.** Output goes to the path specified by `--output` (or defaults to `<service-name>.yaml` in the current directory).
+
+### Scoped Discovery (`--scope`)
+
+When `--scope` is provided (only valid with `--headless`), limit discovery to specific parts of the codebase:
+
+- `--scope "src/controllers/OrderController.php, src/services/OrderService.php"` -- discover only code reachable from these files
+- `--scope "POST /orders, data_models.Order"` -- discover only these endpoints and data models
+- File paths and endpoint identifiers can be mixed in the same `--scope`
+
+When scoped:
+1. Skip Pass 1 orientation (the existing manifest already has the skeleton)
+2. In Pass 2, trace only the specified code paths
+3. In Pass 3, scan for cross-cutting concerns only if they touch the scoped files
+4. In Pass 4, merge results INTO the existing manifest (read the existing file, update only the affected sections, preserve everything else)
+
+The existing manifest is read from the `--output` path. If the file doesn't exist, fall back to full discovery.
 
 ## Output Schema
 
@@ -85,8 +116,9 @@ Execute these passes in order. Each pass builds on the previous one.
 
 4. Produce a skeleton: service identity + list of routes with method and path only.
 
-5. **If there are more than 50 endpoints**, ask the user:
-   > "This service has N endpoints. Discover all of them (in batches), or focus on routes under a specific prefix (e.g., `/orders/*`)?"
+5. **If there are more than 50 endpoints:**
+   - **Interactive mode:** Ask the user: "This service has N endpoints. Discover all of them (in batches), or focus on routes under a specific prefix (e.g., `/orders/*`)?"
+   - **Headless mode:** Discover all endpoints in batches without asking.
 
 ### Pass 2: Endpoint Deep-Dive
 
@@ -129,8 +161,9 @@ For each, determine if it introduces new data flows or business rules not alread
 3. Extract service-wide business rules that apply to multiple endpoints into the top-level `business_rules` list
 4. Order endpoints by path alphabetically, then by HTTP method
 5. Write the file as `<service-name>.yaml`
-6. Present a summary to the user:
+6. **Interactive mode:** Present a summary to the user:
    > "Discovered N endpoints, M outbound calls, K data models, J events. L endpoints marked confidence: low. Review the output at `<path>`."
+   **Headless mode:** Write the file silently. Log a one-line summary to stdout for pipeline consumption.
 
 ## Important Notes
 
