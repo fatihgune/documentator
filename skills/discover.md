@@ -125,23 +125,39 @@ Execute these passes in order. Each pass builds on the previous one.
 For EACH endpoint (or each batch if >50):
 
 1. Start from the route handler/controller method
-2. Trace the code path through service classes, repositories, and external calls
+2. **Follow the full call chain.** Do not stop at the controller. Read into service classes, domain objects, repositories, and helper methods. If the handler calls `OrderService::create()`, read that method. If that method calls `DiscountCalculator::apply()`, read that too. Follow until you reach data access or external calls -- typically 2-4 levels deep.
 3. For each endpoint, extract:
    - **Request shape**: parameter names and types from the handler signature, form request, or validation rules
    - **Response shape**: field names and types from what's returned (look at the actual data structure, not the serializer class)
-   - **Business rules**: any conditional logic (if/else, switch, validation rules beyond simple type checks)
+   - **Business rules**: every conditional branch that affects behavior. This includes:
+     - Obvious top-level conditions (`if total > 500, require approval`)
+     - Nested conditions in service classes (`if customer.tier == 'gold', bypass verification`)
+     - Guard clauses and early returns that change the flow
+     - Switch/match statements that route to different behaviors
+     - Validation rules beyond simple type checks (business constraints like "quantity must be > 0 and <= stock")
+     - Feature flags or config-driven behavior (`if feature('new_checkout') enabled, use v2 flow`)
    - **Outbound calls**: HTTP calls to other services, queue dispatches, event emissions
 
-4. For outbound calls, try to resolve the target:
+4. **Business rules are the most important output.** A manifest with accurate business rules is far more valuable than one with complete endpoint coverage but generic descriptions. When in doubt, spend more time reading service-layer code to find conditional logic. Describe each rule in specific terms with actual thresholds, field names, and conditions -- not vague summaries.
+
+5. For outbound calls, try to resolve the target:
    - Check config files, environment variable names, service registries
    - Check Kubernetes manifests, Docker Compose, or similar orchestration config
    - If the URL is in an env var like `ORDER_SERVICE_URL`, the target is likely `order-service`
    - If unresolvable, set `target: unknown` and note what you found in the condition field
 
-5. Mark endpoints `confidence: low` if:
+6. Mark endpoints `confidence: low` if:
    - You couldn't trace through to the response (too many layers of abstraction)
    - The handler delegates to a complex class hierarchy you couldn't fully follow
    - Key business logic is in a dependency you don't have access to
+
+### Pass 2.5: Business Rule Audit
+
+After completing Pass 2 for all endpoints, do a targeted review:
+
+1. For each endpoint that has **zero business rules**, re-read the service-layer code it calls. Most endpoints that write data have at least one conditional. If you genuinely find none, that's fine -- but an endpoint like `POST /orders` with no business rules is a red flag that you read too shallowly.
+2. For each business rule you captured, verify it includes **specific values** (dollar amounts, status names, role names, thresholds) rather than vague descriptions. "Orders require approval" is too vague. "Orders over $500 require manager approval" is correct.
+3. Check shared service classes, base classes, and traits/mixins that multiple endpoints use. Business rules in shared code often get missed because they're not in the endpoint's direct call chain.
 
 ### Pass 3: Cross-Cutting Concerns
 
